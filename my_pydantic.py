@@ -6,6 +6,16 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+class Settings_error(BaseSettings):
+    api_key: str
+    login: str
+    seed: int
+    err: str
+
+    class Config:
+        env_file = '.env'
+        env_file_encoding = "utf-8"
+
 class Settings(BaseSettings):
     api_key: str
     login: str
@@ -117,8 +127,15 @@ def validate_env_variables():
         print(e.errors())
 
 
+def validate_env_variables_error():
+    try:
+        app_settings = Settings_error()
+        print(app_settings.api_key)
+        print(app_settings.login)
+        print(app_settings.seed)
+    except ValidationError as e:
+        print(e.errors())
 
 
-
-validate_env_variables()
+validate_env_variables_error()
 
