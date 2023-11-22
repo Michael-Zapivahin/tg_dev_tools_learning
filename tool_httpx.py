@@ -13,6 +13,3 @@ def post_json():
     print(response.text)
 
 
-
-get_json()
-post_json()
