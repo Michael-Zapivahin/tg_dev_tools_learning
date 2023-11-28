@@ -3,6 +3,7 @@
 #  Отправить себе текстовое сообщение от имени tg-бота  - success
 #  Отправить себе текстовое сообщение с кнопками от имени tg-бота - success
 #  Отправить себе сообщение с картинкой от имени tg-бота - success
+#  сделать ветку и merge
 
 from pydantic import BaseSettings
 from dotenv import load_dotenv
