@@ -13,7 +13,7 @@ class SettingsError(BaseSettings):
     err: str
 
     class Config:
-        env_file = '.env'
+        env_file = '../.env'
         env_file_encoding = "utf-8"
 
 
@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     seed: int
 
     class Config:
-        env_file = '.env'
+        env_file = '../.env'
         env_file_encoding = "utf-8"
 
 

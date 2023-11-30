@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     user_id: str
 
     class Config:
-        env_file = '.env'
+        env_file = '../.env'
         env_file_encoding = "utf-8"
 
 
@@ -52,7 +52,7 @@ def send_message_with_buttons(token, tg_chat_id):
 
 
 def send_message_with_paint(token, chat_id):
-    photo_filename = 'epic.png'
+    photo_filename = '../epic.png'
     with SyncTgClient.setup(token):
         with open(photo_filename, 'rb') as f:
             photo_content = f.read()
