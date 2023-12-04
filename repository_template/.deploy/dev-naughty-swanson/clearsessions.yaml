@@ -1,0 +1,54 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: clear-sessions
+  namespace: dev-naughty-swanson
+  labels:
+    app.kubernetes.io/name: django
+spec:
+  schedule: "@monthly"
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      ttlSecondsAfterFinished: 100
+      activeDeadlineSeconds: 100
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: django
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: django
+            image: cr.yandex/crp3h04khu638hf0ob6l/django:<COMMIT_HASH>
+            imagePullPolicy: IfNotPresent
+            env:
+              - name: WEBAPP_ROOT_URL
+                valueFrom:
+                  secretKeyRef:
+                    name: django
+                    key: webapp_root_url
+                    optional: false
+              - name: DJ__SECRET_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: django
+                    key: secret_key
+                    optional: false
+              - name: TG__BOT_TOKEN
+                valueFrom:
+                  secretKeyRef:
+                    name: tg-bot
+                    key: token
+                    optional: false
+              - name: POSTGRES_DSN
+                valueFrom:
+                  secretKeyRef:
+                    name: postgres
+                    key: dsn
+                    optional: false
+            command:
+              - python
+              - manage.py
+              - clearsessions
+

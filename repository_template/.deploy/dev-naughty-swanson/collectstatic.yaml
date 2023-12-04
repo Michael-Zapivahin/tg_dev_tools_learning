@@ -1,0 +1,69 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: django-collectstatic
+  namespace: dev-naughty-swanson
+  labels:
+    app.kubernetes.io/name: django
+spec:
+  activeDeadlineSeconds: 60
+  ttlSecondsAfterFinished: 60
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - image: cr.yandex/crp3h04khu638hf0ob6l/django:<COMMIT_HASH>
+          imagePullPolicy: IfNotPresent
+          name: django
+          env:
+            - name: AWS__S3_ENDPOINT_URL
+              valueFrom:
+                secretKeyRef:
+                  name: bucket
+                  key: endpoint_url
+                  optional: false
+            - name: AWS__STORAGE_BUCKET_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: bucket
+                  key: bucket_name
+                  optional: false
+            - name: AWS__ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: bucket
+                  key: access_key
+                  optional: false
+            - name: AWS__SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: bucket
+                  key: secret_key
+                  optional: false
+            - name: DJ__SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: django
+                  key: secret_key
+                  optional: false
+            - name: WEBAPP_ROOT_URL
+              valueFrom:
+                secretKeyRef:
+                  name: django
+                  key: webapp_root_url
+                  optional: false
+            - name: POSTGRES_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: postgres
+                  key: dsn
+                  optional: false
+            - name: TG__BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: tg-bot
+                  key: token
+                  optional: false
+          command: ["python", "manage.py", "collectstatic", "--no-input"]

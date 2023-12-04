@@ -1,0 +1,48 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: django-migrate
+  namespace: dev-naughty-swanson
+  labels:
+    app.kubernetes.io/name: django
+spec:
+  backoffLimit: 4
+  activeDeadlineSeconds: 60
+  ttlSecondsAfterFinished: 60
+  template:
+    spec:
+      containers:
+      - name: django-migrate-container
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: WEBAPP_ROOT_URL
+            valueFrom:
+              secretKeyRef:
+                name: django
+                key: webapp_root_url
+                optional: false
+          - name: DJ__SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                name: django
+                key: secret_key
+                optional: false
+          - name: POSTGRES_DSN
+            valueFrom:
+              secretKeyRef:
+                name: postgres
+                key: dsn
+                optional: false
+          - name: TG__BOT_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: tg-bot
+                key: token
+                optional: false
+        image: cr.yandex/crp3h04khu638hf0ob6l/django:<COMMIT_HASH>
+        command:
+          - python3
+          - manage.py
+          - migrate
+          - --no-input
+      restartPolicy: Never

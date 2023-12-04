@@ -1,0 +1,12 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: django-configmap
+  namespace: dev-naughty-swanson
+data:
+  DJ__ALLOWED_HOSTS: 'dev-naughty-swanson.sirius-k8s.dvmn.org'
+  ROLLBAR__ENVIRONMENT: 'development'
+  DJ__CSRF_TRUSTED_ORIGINS: 'https://*.dvmn.org'
+  COMMIT_HASH: <COMMIT_HASH>
+
