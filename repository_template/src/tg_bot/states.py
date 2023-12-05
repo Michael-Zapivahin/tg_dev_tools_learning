@@ -20,8 +20,22 @@ from trigger_mailing.state_machine import (
 
 from .models import Conversation
 from .decorators import redirect_menu_commands
+from .languages import Languages
 
-router = Router(decorators=[redirect_menu_commands])
+
+def text_locator_state(state_class):
+
+    class WrappedStateClass(state_class):
+        def process(self, event):
+            state = super().process(event=event)
+            SendMessageRequest(
+                text=state.state_class_locator,
+                chat_id=Conversation.current.tg_chat_id,
+            ).send()
+    return WrappedStateClass
+
+
+router = Router(decorators=[redirect_menu_commands, text_locator_state])
 
 state_machine = PrivateChatStateMachine(
     router=router,
@@ -34,6 +48,103 @@ state_machine = PrivateChatStateMachine(
         *PrivateChatStateMachine.DEFAULT_CONTEXT_FUNCS,
     ],
 )
+
+
+@router.register('/languages/')
+class LanguagesState(PrivateChatState):
+
+    def enter_state(self) -> Locator | None:
+        mailing_text = dedent('''\
+            *📨 1️⃣ It's list of programming languages!*
+
+            Select a part:
+        ''')
+
+        reply_markup = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text='1-10',
+                        callback_data='part-1',
+                    ),
+                    InlineKeyboardButton(
+                        text='11-20',
+                        callback_data='part-2',
+                    ),
+                    InlineKeyboardButton(
+                        text='21-30',
+                        callback_data='part-3',
+                    ),
+                ],
+            ],
+        )
+        SendMessageRequest(
+            text=Languages().get_list()[0:10].__str__(),
+            chat_id=Conversation.current.tg_chat_id,
+            reply_markup=reply_markup,
+        ).send()
+
+    def process_callback_query(self, callback_query: PrivateChatCallbackQuery) -> Locator | None:
+        part_number = int(str(callback_query.data).split('-')[1])
+        if part_number == 1:
+            message = Languages().get_list()[1:10].__str__()
+        elif part_number == 2:
+            message = Languages().get_list()[11:20].__str__()
+        elif part_number == 3:
+            message = Languages().get_list()[21:].__str__()
+        else:
+            message = 'No selected.'
+        SendMessageRequest(
+            text=f' your choice {message}',
+            chat_id=Conversation.current.tg_chat_id,
+        ).send()
+
+        return Locator('/languages')
+
+
+
+
+@router.register('/buttons/')
+class ButtonState(PrivateChatState):
+
+    def enter_state(self) -> Locator | None:
+        mailing_text = dedent('''\
+            *📨 1️⃣ It's two buttons!*
+
+            Select a button:
+        ''')
+
+        reply_markup = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text='Button 1',
+                        callback_data='button1',
+                    ),
+                    InlineKeyboardButton(
+                        text='Button 2',
+                        callback_data='button2',
+                    ),
+                ],
+            ],
+        )
+        SendMessageRequest(
+            text=mailing_text,
+            chat_id=Conversation.current.tg_chat_id,
+            reply_markup=reply_markup,
+        ).send()
+
+    def process_callback_query(self, callback_query: PrivateChatCallbackQuery) -> Locator | None:
+        SendMessageRequest(
+            text=f'Your choice is: {callback_query.data}',
+            chat_id=Conversation.current.tg_chat_id,
+        ).send()
+
+        match callback_query.data:
+            case 'button1':
+                return Locator('/welcome/')
+            case 'button2':
+                return Locator('/buttons')
 
 
 @router.register('/')
