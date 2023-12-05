@@ -18,6 +18,10 @@ def redirect_menu_commands(state_class: Type[PrivateChatState]) -> Type[PrivateC
                         return Locator('/main-menu/')
                     case ['/welcome']:
                         return Locator('/welcome/')
+                    case['/buttons']:
+                        return Locator('/buttons/')
+                    case['/languages']:
+                        return Locator('/languages/')
 
             return super().process(event=event)
     return WrappedStateClass
