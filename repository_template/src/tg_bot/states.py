@@ -2,6 +2,7 @@ from textwrap import dedent
 
 from tg_api import SendMessageRequest, InlineKeyboardMarkup, InlineKeyboardButton
 from yostate import Router, Locator
+from django.core.paginator import Paginator
 
 from django_tg_bot_framework import (
     PrivateChatStateMachine,
@@ -50,56 +51,78 @@ state_machine = PrivateChatStateMachine(
 )
 
 
+class PaginatorItems:
+    def __init__(self, items, per_page):
+        self.paginator = Paginator(items, per_page)
+        self.current_page = 1
+        self.num_pages = self.paginator.num_pages
+
+    def get_current_page_items(self):
+        return self.paginator.page(self.current_page)
+
+    def go_to_next_page(self):
+        if self.current_page < self.paginator.num_pages:
+            self.current_page += 1
+        return self.get_current_page_items()
+
+    def go_to_previous_page(self):
+        if self.current_page > 1:
+            self.current_page -= 1
+        return self.get_current_page_items()
+
+
+PAGINATOR_LANGUAGES = PaginatorItems(Languages, 5)
+
+
 @router.register('/languages/')
 class LanguagesState(PrivateChatState):
 
     def enter_state(self) -> Locator | None:
-        mailing_text = dedent('''\
-            *📨 1️⃣ It's list of programming languages!*
-
-            Select a part:
-        ''')
 
         reply_markup = InlineKeyboardMarkup(
             inline_keyboard=[
                 [
                     InlineKeyboardButton(
-                        text='1-10',
-                        callback_data='part-1',
+                        text='previous',
+                        callback_data='previous',
                     ),
                     InlineKeyboardButton(
-                        text='11-20',
-                        callback_data='part-2',
+                        text='next',
+                        callback_data='next',
                     ),
                     InlineKeyboardButton(
-                        text='21-30',
-                        callback_data='part-3',
+                        text='main menu',
+                        callback_data='start',
                     ),
                 ],
             ],
         )
+
+
         SendMessageRequest(
-            text=Languages().get_list()[0:10].__str__(),
+            text=f'The pagination list of languages, of {PAGINATOR_LANGUAGES.num_pages} pages',
             chat_id=Conversation.current.tg_chat_id,
             reply_markup=reply_markup,
         ).send()
 
+
     def process_callback_query(self, callback_query: PrivateChatCallbackQuery) -> Locator | None:
-        part_number = int(str(callback_query.data).split('-')[1])
-        if part_number == 1:
-            message = Languages().get_list()[1:10].__str__()
-        elif part_number == 2:
-            message = Languages().get_list()[11:20].__str__()
-        elif part_number == 3:
-            message = Languages().get_list()[21:].__str__()
+        step = callback_query.data
+        if step == 'next':
+            message = PAGINATOR_LANGUAGES.go_to_next_page().object_list
+        elif step == 'previous':
+            message = PAGINATOR_LANGUAGES.go_to_previous_page().object_list
+        elif step =='start':
+            return Locator('/start')
         else:
             message = 'No selected.'
+
         SendMessageRequest(
-            text=f' your choice {message}',
+            text=f'page {PAGINATOR_LANGUAGES.current_page} {message}',
             chat_id=Conversation.current.tg_chat_id,
         ).send()
 
-        return Locator('/languages')
+        return Locator('/languages/')
 
 
 

@@ -1,6 +1,6 @@
-class Languages:
-    def get_list(self):
-        return [
+
+
+Languages = [
                 "Python",
                 "Java",
                 "C++",
@@ -37,3 +37,6 @@ class Languages:
                 "Clipper",
                 "CLIPS",
             ]
+
+
+
